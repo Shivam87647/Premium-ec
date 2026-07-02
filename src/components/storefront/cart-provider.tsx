@@ -43,13 +43,68 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isCartOpen, setIsCartOpen] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount and sync prices with DB
   React.useEffect(() => {
     setIsMounted(true);
     const savedCart = localStorage.getItem("cart");
     if (savedCart) {
       try {
-        setItems(JSON.parse(savedCart));
+        const parsedItems: CartItem[] = JSON.parse(savedCart);
+        setItems(parsedItems);
+
+        // Async sync prices with Supabase DB
+        if (parsedItems.length > 0) {
+          const syncPrices = async () => {
+            try {
+              const { createClient } = await import("@/lib/supabase/client");
+              const supabase = createClient();
+              
+              const extractProductId = (id: string): string => {
+                return id.length >= 36 ? id.substring(0, 36) : id;
+              };
+
+              const productIds = parsedItems.map(item => extractProductId(item.id)).filter(Boolean);
+              
+              const { data: products, error } = await supabase
+                .from("products")
+                .select("id, price, sale_price, sale_start, sale_end")
+                .in("id", productIds);
+
+              if (!error && products) {
+                let updated = false;
+                const newItems = parsedItems.map(item => {
+                  const pid = extractProductId(item.id);
+                  const dbProd = products.find(p => p.id === pid);
+                  if (dbProd) {
+                    // Determine effective price
+                    let effectivePrice = Number(dbProd.price);
+                    if (dbProd.sale_price != null) {
+                      const now = new Date();
+                      const saleStartOk = !dbProd.sale_start || new Date(dbProd.sale_start) <= now;
+                      const saleEndOk = !dbProd.sale_end || new Date(dbProd.sale_end) >= now;
+                      if (saleStartOk && saleEndOk) {
+                        effectivePrice = Number(dbProd.sale_price);
+                      }
+                    }
+                    if (item.price !== effectivePrice) {
+                      updated = true;
+                      return { ...item, price: effectivePrice };
+                    }
+                  }
+                  return item;
+                });
+
+                if (updated) {
+                  setItems(newItems);
+                  localStorage.setItem("cart", JSON.stringify(newItems));
+                }
+              }
+            } catch (err) {
+              console.error("Failed to sync cart prices with DB:", err);
+            }
+          };
+          syncPrices();
+        }
       } catch (e) {
         console.error("Failed to parse cart from local storage", e);
       }
