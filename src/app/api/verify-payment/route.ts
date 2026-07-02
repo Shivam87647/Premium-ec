@@ -10,9 +10,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
     }
 
-    const isMockMode = razorpay_order_id.startsWith("order_mock_") || razorpay_signature === "cash_on_delivery";
+    const isDevelopment = process.env.NODE_ENV === "development";
 
-    if (!isMockMode) {
+    // Mock mode: only allowed in development environment
+    const isMockMode = isDevelopment && (
+      razorpay_order_id.startsWith("order_mock_") ||
+      razorpay_signature === "mock_signature_bypass"
+    );
+
+    // Cash on delivery: allowed in all environments but requires DB validation
+    const isCashOnDelivery = razorpay_signature === "cash_on_delivery";
+
+    if (!isMockMode && !isCashOnDelivery) {
+      // Standard Razorpay HMAC verification
       const secret = process.env.Razorpay_SECRET_KEY || "";
       const generated_signature = crypto
         .createHmac("sha256", secret)
@@ -24,6 +34,24 @@ export async function POST(req: Request) {
       }
     }
 
+    if (isCashOnDelivery) {
+      // Validate this order actually exists and was created as a Cash order
+      const supabaseCheck = createServiceRoleClient();
+      const { data: existingOrder, error: lookupError } = await supabaseCheck
+        .from("orders")
+        .select("id, notes, razorpay_payment_id")
+        .eq("razorpay_payment_id", razorpay_order_id)
+        .single();
+
+      if (lookupError || !existingOrder) {
+        return NextResponse.json({ error: "Order not found for COD verification" }, { status: 400 });
+      }
+
+      if (existingOrder.notes !== "Cash") {
+        return NextResponse.json({ error: "Order was not created as Cash on Delivery" }, { status: 400 });
+      }
+    }
+
     // Payment is valid! Update the order in Supabase using the service role client
     let orderNumber = order_number || "";
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL.startsWith('http')) {
@@ -32,7 +60,7 @@ export async function POST(req: Request) {
       const { error } = await supabase
         .from("orders")
         .update({
-          payment_status: isMockMode && razorpay_signature === "cash_on_delivery" ? "pending" : "paid",
+          payment_status: isCashOnDelivery ? "pending" : "paid",
           razorpay_payment_id: razorpay_payment_id, // Store actual transaction payment ID
         })
         .eq("razorpay_payment_id", razorpay_order_id); // Match temporary order.id stored in the column
@@ -56,3 +84,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

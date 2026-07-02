@@ -588,6 +588,24 @@ export default function CheckoutPage() {
                               value={signupPassword}
                               onChange={(e) => setSignupPassword(e.target.value)}
                             />
+                            {/* Live password strength checklist */}
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1">
+                              {[
+                                { label: "6+ characters", met: signupPassword.length >= 6 },
+                                { label: "Uppercase letter", met: /[A-Z]/.test(signupPassword) },
+                                { label: "Lowercase letter", met: /[a-z]/.test(signupPassword) },
+                                { label: "A number", met: /[0-9]/.test(signupPassword) },
+                              ].map((rule) => (
+                                <div key={rule.label} className="flex items-center gap-1.5">
+                                  <span className={`text-[11px] transition-colors ${rule.met ? "text-green-600" : "text-[#C4C4C4]"}`}>
+                                    {rule.met ? "✓" : "○"}
+                                  </span>
+                                  <span className={`text-[10px] font-medium transition-colors ${rule.met ? "text-green-700" : "text-[#9CA3AF]"}`}>
+                                    {rule.label}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           </motion.div>
                         )}
                       </div>

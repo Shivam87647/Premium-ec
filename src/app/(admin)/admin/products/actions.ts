@@ -3,15 +3,28 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+// Defense-in-depth: verify user is authenticated AND has admin role
+async function assertAdmin(supabase: any) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "admin") throw new Error("Unauthorized: admin role required");
+  return user;
+}
+
 export async function saveProduct(formData: FormData) {
   try {
     const supabase = await createClient();
     
-    // Verify authenticated user
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { error: "Unauthorized" };
-    }
+    // Verify authenticated admin user
+    await assertAdmin(supabase);
+
 
     const id = formData.get("id") as string;
     const title = formData.get("title") as string;
@@ -106,6 +119,9 @@ export async function deleteProduct(productId: string) {
   try {
     const supabase = await createClient();
     
+    // Verify authenticated admin user
+    await assertAdmin(supabase);
+
     const { error } = await supabase.from('products').delete().eq('id', productId);
     
     if (error) {

@@ -183,10 +183,22 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
           ? product.product_images.sort((a: any, b: any) => a.sort_order - b.sort_order).map((img: any) => img.image_url) 
           : [product.og_image_url || fallbackProducts["essential-t-shirt"].images[0]];
         
+        // 3.5 Check if sale is active
+        let activeSalePrice: number | undefined = undefined;
+        if (product.sale_price != null) {
+          const now = new Date();
+          const saleStartOk = !product.sale_start || new Date(product.sale_start) <= now;
+          const saleEndOk = !product.sale_end || new Date(product.sale_end) >= now;
+          if (saleStartOk && saleEndOk) {
+            activeSalePrice = Number(product.sale_price);
+          }
+        }
+
         productData = {
           id: product.id,
           title: product.title,
           price: Number(product.price),
+          salePrice: activeSalePrice,
           rating: Number(avgRating.toFixed(1)),
           reviewsCount: fetchedReviews.length,
           description: product.description || "Premium product.",

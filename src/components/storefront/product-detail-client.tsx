@@ -78,6 +78,22 @@ export function ProductDetailClient({
   const [selectedColor, setSelectedColor] = React.useState(productData.colors[0]?.name || "Default");
   const [selectedSize, setSelectedSize] = React.useState(productData.sizes[0] || "Default");
   const [quantity, setQuantity] = React.useState(1);
+  const [sizeError, setSizeError] = React.useState(false);
+
+  // Mobile sticky CTA: show when main CTA scrolls out of view
+  const ctaRef = React.useRef<HTMLButtonElement>(null);
+  const [showStickyCta, setShowStickyCta] = React.useState(false);
+
+  React.useEffect(() => {
+    const node = ctaRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyCta(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   const [isWishlisted, setIsWishlisted] = React.useState(false);
   const [wishlistLoading, setWishlistLoading] = React.useState(false);
@@ -219,11 +235,19 @@ export function ProductDetailClient({
       addToast({ title: "Out of Stock", description: "This item is currently out of stock.", type: "error" });
       return;
     }
+
+    // Inline size validation
+    if (productData.sizes && productData.sizes.length > 0 && !selectedSize) {
+      setSizeError(true);
+      addToast({ title: "Please select a size", type: "error" });
+      return;
+    }
     
+    const activePrice = productData.salePrice || productData.price;
     addItem({
       id: productData.id + "-" + selectedColor + "-" + selectedSize,
       title: productData.title,
-      price: productData.price,
+      price: activePrice,
       quantity,
       image: productData.images[0],
       variant: `${selectedColor} / ${selectedSize}`,
@@ -444,7 +468,17 @@ export function ProductDetailClient({
               </h1>
               
               <div className="flex items-center space-x-4">
-                <p className="text-2xl font-bold text-[#1A1A1A] tracking-tight">{formatCurrency(productData.price)}</p>
+                {productData.salePrice ? (
+                  <>
+                    <p className="text-2xl font-bold text-accent tracking-tight">{formatCurrency(productData.salePrice)}</p>
+                    <p className="text-sm text-[#9CA3AF] line-through">{formatCurrency(productData.price)}</p>
+                    <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-accent">
+                      -{Math.round(((productData.price - productData.salePrice) / productData.price) * 100)}%
+                    </span>
+                  </>
+                ) : (
+                  <p className="text-2xl font-bold text-[#1A1A1A] tracking-tight">{formatCurrency(productData.price)}</p>
+                )}
                 
                 {totalReviews > 0 && (
                   <div className="flex items-center space-x-1.5 text-xs text-[#6B6B6B] border-l border-[rgba(0,0,0,0.08)] pl-4">
@@ -514,14 +548,16 @@ export function ProductDetailClient({
             {productData.sizes && productData.sizes.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B6B6B]">Size: {selectedSize}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B6B6B]">Size: {selectedSize || "Select"}</span>
                   <button className="text-[10px] font-bold text-[#9CA3AF] hover:text-[#1A1A1A] underline uppercase tracking-wider cursor-pointer">Size Guide</button>
                 </div>
-                <div className="flex flex-wrap gap-2.5">
+                <div className={`flex flex-wrap gap-2.5 rounded-lg p-1 -m-1 transition-all ${
+                  sizeError ? "ring-2 ring-red-400 ring-offset-1 animate-[shake_0.3s_ease-in-out]" : ""
+                }`}>
                   {productData.sizes.map((size: string) => (
                     <button
                       key={size}
-                      onClick={() => setSelectedSize(size)}
+                      onClick={() => { setSelectedSize(size); setSizeError(false); }}
                       className={`h-11 min-w-[2.75rem] px-4 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                         selectedSize === size
                           ? "border-[#1A1A1A] bg-[#1A1A1A] text-white shadow-sm"
@@ -532,6 +568,9 @@ export function ProductDetailClient({
                     </button>
                   ))}
                 </div>
+                {sizeError && (
+                  <p className="text-[11px] text-red-500 font-medium mt-1.5">Please select a size to continue</p>
+                )}
               </div>
             )}
 
@@ -556,6 +595,7 @@ export function ProductDetailClient({
               </div>
               
               <Button
+                ref={ctaRef}
                 onClick={handleAddToCart}
                 disabled={isOutOfStock}
                 size="lg"
@@ -563,7 +603,7 @@ export function ProductDetailClient({
                   isOutOfStock ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
-                {isOutOfStock ? "Out of Stock" : `Add to Cart — ${formatCurrency(productData.price * quantity)}`}
+                {isOutOfStock ? "Out of Stock" : `Add to Cart — ${formatCurrency((productData.salePrice || productData.price) * quantity)}`}
               </Button>
 
               <div className="flex gap-2">
@@ -800,6 +840,33 @@ export function ProductDetailClient({
         isLoading={deletingReview}
         variant="danger"
       />
+
+      {/* Mobile Sticky Add to Cart CTA */}
+      <AnimatePresence>
+        {showStickyCta && !isOutOfStock && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 backdrop-blur-md border-t border-[rgba(0,0,0,0.08)] px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
+          >
+            <div className="flex items-center gap-3 max-w-lg mx-auto">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-[#1A1A1A] truncate">{productData.title}</p>
+                <p className="text-xs font-bold text-accent">{formatCurrency((productData.salePrice || productData.price) * quantity)}</p>
+              </div>
+              <Button
+                onClick={handleAddToCart}
+                size="lg"
+                className="h-11 px-6 text-xs font-bold uppercase tracking-wider shadow-md shimmer-btn whitespace-nowrap"
+              >
+                Add to Cart
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
