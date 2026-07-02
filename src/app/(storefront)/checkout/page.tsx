@@ -531,7 +531,7 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <div className="flex flex-col-reverse lg:flex-row gap-12 items-start">
+        <div className="flex flex-col lg:flex-row gap-12 items-start">
           {/* Main Content Area */}
           <div className="w-full lg:w-3/5">
             <div className="bg-white rounded-2xl border border-[rgba(0,0,0,0.06)] p-6 md:p-8 shadow-sm">
@@ -783,7 +783,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Order Summary Sidebar */}
-          <div className="w-full lg:w-2/5 sticky top-24">
+          <div className="w-full lg:w-2/5 lg:sticky lg:top-24 z-10">
             <div className="bg-white rounded-2xl border border-[rgba(0,0,0,0.06)] p-6 lg:p-8 shadow-sm space-y-6">
               <h2 className="font-serif text-lg font-bold border-b border-[rgba(0,0,0,0.06)] pb-4 text-[#1A1A1A]">Bag Items</h2>
               

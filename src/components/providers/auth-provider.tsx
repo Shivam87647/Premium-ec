@@ -25,12 +25,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = React.useMemo(() => createClient(), []);
 
   const fetchProfile = React.useCallback(
-    async (userId: string) => {
-      const { data } = await supabase
+    async (userId: string, currentUser?: User | null) => {
+      let { data } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
+      
+      // Fallback Sync: If full_name is missing in profile table but present in user metadata, update it!
+      if (data && !data.full_name && currentUser?.user_metadata?.full_name) {
+        const { data: updated } = await supabase
+          .from("profiles")
+          .update({ full_name: currentUser.user_metadata.full_name })
+          .eq("id", userId)
+          .select()
+          .single();
+        if (updated) {
+          data = updated;
+        }
+      }
+
       setProfile(data as Profile | null);
     },
     [supabase]
@@ -45,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       if (currentUser) {
-        await fetchProfile(currentUser.id);
+        await fetchProfile(currentUser.id, currentUser);
       }
       setIsLoading(false);
     };
@@ -59,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       if (currentUser) {
-        await fetchProfile(currentUser.id);
+        await fetchProfile(currentUser.id, currentUser);
       } else {
         setProfile(null);
       }

@@ -153,7 +153,7 @@ export default function CartPage() {
                       key={item.id}
                       initial={{ opacity: 1 }}
                       exit={{ opacity: 0, height: 0, padding: 0 }}
-                      className="flex gap-4 md:gap-6 py-6 first:pt-0 last:pb-0 items-center"
+                      className="grid grid-cols-[80px_1fr] sm:flex gap-4 md:gap-6 py-6 first:pt-0 last:pb-0 items-start sm:items-center"
                     >
                       <div className="relative h-24 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-[#F5F5F0] border border-[rgba(0,0,0,0.04)]">
                         <img
@@ -163,50 +163,55 @@ export default function CartPage() {
                         />
                       </div>
 
-                      <div className="flex-1 min-w-0">
-                        <Link
-                          href={`/products/${item.id.split("-")[0]}`}
-                          className="hover:text-accent font-serif text-base font-semibold text-[#1A1A1A] transition-colors truncate block"
-                        >
-                          {item.title}
-                        </Link>
-                        <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wider font-bold mt-1">
-                          {item.variant || "Default Variant"}
-                        </p>
-                        
-                        <div className="flex items-center rounded-lg border border-[rgba(0,0,0,0.08)] bg-[#FAFAFA] w-fit mt-4">
-                          <button
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className="px-2.5 py-1.5 text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors cursor-pointer"
-                            aria-label="Decrease quantity"
+                      <div className="flex flex-col sm:flex-row justify-between flex-1 gap-4 min-w-0">
+                        <div className="min-w-0">
+                          <Link
+                            href={`/products/${item.id.split("-")[0]}`}
+                            className="hover:text-accent font-serif text-base font-semibold text-[#1A1A1A] transition-colors truncate block"
                           >
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="text-xs font-semibold w-8 text-center text-[#1A1A1A]">{item.quantity}</span>
+                            {item.title}
+                          </Link>
+                          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wider font-bold mt-1">
+                            {item.variant || "Default Variant"}
+                          </p>
+                          
+                          <div className="flex items-center rounded-lg border border-[rgba(0,0,0,0.08)] bg-[#FAFAFA] w-fit mt-4">
+                            <button
+                              onClick={() => updateQuantity(item.id, -1)}
+                              className="px-2.5 py-1.5 text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors cursor-pointer"
+                              aria-label="Decrease quantity"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="text-xs font-semibold w-8 text-center text-[#1A1A1A]">{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item.id, 1)}
+                              className="px-2.5 py-1.5 text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors cursor-pointer"
+                              aria-label="Increase quantity"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 border-t sm:border-t-0 border-[rgba(0,0,0,0.04)] pt-3 sm:pt-0 w-full sm:w-auto">
+                          <div className="text-left sm:text-right">
+                            <p className="font-bold text-sm text-[#1A1A1A]">
+                              {formatCurrency(item.price * item.quantity)}
+                            </p>
+                            <p className="text-[10px] text-[#9CA3AF] mt-0.5">
+                              {formatCurrency(item.price)} each
+                            </p>
+                          </div>
                           <button
-                            onClick={() => updateQuantity(item.id, 1)}
-                            className="px-2.5 py-1.5 text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors cursor-pointer"
-                            aria-label="Increase quantity"
+                            onClick={() => removeItem(item.id)}
+                            className="text-[#9CA3AF] hover:text-destructive p-1.5 cursor-pointer transition-colors flex items-center gap-1 sm:block sm:ml-auto"
+                            aria-label="Remove item"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Trash2 className="w-4 h-4" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider sm:hidden">Remove</span>
                           </button>
                         </div>
-                      </div>
-
-                      <div className="text-right space-y-2 flex-shrink-0">
-                        <p className="font-bold text-sm text-[#1A1A1A]">
-                          {formatCurrency(item.price * item.quantity)}
-                        </p>
-                        <p className="text-[10px] text-[#9CA3AF]">
-                          {formatCurrency(item.price)} each
-                        </p>
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          className="text-[#9CA3AF] hover:text-destructive p-1 cursor-pointer transition-colors block ml-auto"
-                          aria-label="Remove item"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
                       </div>
                     </motion.div>
                   ))}

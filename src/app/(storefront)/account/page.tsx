@@ -696,8 +696,8 @@ function AccountPageContent() {
 
       <div className="flex flex-col md:flex-row gap-12 items-start">
         {/* Sidebar Navigation */}
-        <aside className="w-full md:w-64 flex-shrink-0 bg-white p-4 rounded-2xl border border-[rgba(0,0,0,0.06)] shadow-sm">
-          <nav className="flex flex-col space-y-0.5">
+        <aside className="w-full md:w-64 flex-shrink-0 bg-transparent md:bg-white md:p-4 rounded-2xl md:border md:border-[rgba(0,0,0,0.06)] md:shadow-sm">
+          <nav className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-col gap-2 md:gap-0 md:space-y-0.5">
             {tabItems.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -705,38 +705,37 @@ function AccountPageContent() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as Tab)}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-xs font-semibold uppercase tracking-wider text-left transition-all cursor-pointer relative ${
+                  className={`flex items-center space-x-2.5 px-3 py-3 md:px-4 md:py-3 rounded-xl md:rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer relative justify-center md:justify-start ${
                     isActive
-                      ? "bg-[#FAFAFA] text-[#1A1A1A]"
-                      : "text-[#6B6B6B] hover:bg-[#FAFAFA] hover:text-[#1A1A1A]"
+                      ? "bg-[#1A1A1A] text-white md:bg-[#FAFAFA] md:text-[#1A1A1A] shadow-sm md:shadow-none"
+                      : "bg-white text-[#6B6B6B] border border-[rgba(0,0,0,0.06)] md:border-none md:bg-transparent hover:bg-[#FAFAFA] hover:text-[#1A1A1A]"
                   }`}
                 >
                   {isActive && (
-                    <motion.div
-                      layoutId="account-nav-indicator"
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#1A1A1A] rounded-r-full"
+                    <div
+                      className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#1A1A1A] rounded-r-full"
                     />
                   )}
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4 flex-shrink-0" />
                   <span>{tab.label}</span>
                 </button>
               );
             })}
-            <div className="border-t border-[rgba(0,0,0,0.06)] mt-4 pt-4">
+            <div className="col-span-2 sm:col-span-1 md:col-span-auto md:border-t border-[rgba(0,0,0,0.06)] md:mt-4 md:pt-4">
               {user ? (
                 <button
                   onClick={signOut}
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg text-xs font-bold uppercase tracking-wider text-destructive hover:bg-red-50 text-left transition-colors cursor-pointer w-full"
+                  className="flex items-center space-x-2.5 px-3 py-3 md:px-4 md:py-3 rounded-xl md:rounded-lg text-xs font-bold uppercase tracking-wider text-destructive bg-white border border-red-100 hover:bg-red-50 text-center justify-center md:text-left md:justify-start md:bg-transparent md:border-none transition-colors cursor-pointer w-full"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-4 w-4 flex-shrink-0" />
                   <span>Log Out</span>
                 </button>
               ) : (
                 <button
                   onClick={() => setActiveTab("dashboard")}
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg text-xs font-bold uppercase tracking-wider text-[#1A1A1A] hover:bg-[#FAFAFA] text-left transition-colors cursor-pointer w-full"
+                  className="flex items-center space-x-2.5 px-3 py-3 md:px-4 md:py-3 rounded-xl md:rounded-lg text-xs font-bold uppercase tracking-wider text-[#1A1A1A] bg-white border border-[rgba(0,0,0,0.06)] hover:bg-[#FAFAFA] text-center justify-center md:text-left md:justify-start md:bg-transparent md:border-none transition-colors cursor-pointer w-full"
                 >
-                  <User className="h-4 w-4" />
+                  <User className="h-4 w-4 flex-shrink-0" />
                   <span>Sign In / Register</span>
                 </button>
               )}
@@ -822,43 +821,94 @@ function AccountPageContent() {
                     </Link>
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-[rgba(0,0,0,0.06)] overflow-hidden">
-                    <table className="w-full text-left text-xs font-semibold uppercase tracking-wider">
-                      <thead className="bg-[#FAFAFA] border-b border-[rgba(0,0,0,0.06)]">
-                        <tr>
-                          <th className="px-6 py-4 text-[#9CA3AF]">Order</th>
-                          <th className="px-6 py-4 text-[#9CA3AF]">Date</th>
-                          <th className="px-6 py-4 text-[#9CA3AF]">Status</th>
-                          <th className="px-6 py-4 text-[#9CA3AF]">Total</th>
-                          <th className="px-6 py-4 text-[#9CA3AF] text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[rgba(0,0,0,0.04)] text-[#1A1A1A]">
-                        {orders.map((order) => (
-                          <tr key={order.id} className="hover:bg-[#FAFAFA] transition-colors">
-                            <td className="px-6 py-4 font-bold lowercase">{order.order_number}</td>
-                            <td className="px-6 py-4 text-[#6B6B6B]">{new Date(order.created_at).toLocaleDateString()}</td>
-                            <td className="px-6 py-4">
+                  <div className="space-y-4">
+                    {/* Mobile Order Cards (Visible on mobile/tablet) */}
+                    <div className="block md:hidden space-y-4">
+                      {orders.map((order) => {
+                        const canCancel = order.fulfillment_status !== "delivered" && order.fulfillment_status !== "cancelled";
+                        return (
+                          <div 
+                            key={order.id} 
+                            className="bg-white rounded-xl border border-[rgba(0,0,0,0.06)] p-5 shadow-sm space-y-4"
+                          >
+                            {/* Card Header: Order Number and Status Badge */}
+                            <div className="flex justify-between items-center pb-3 border-b border-[rgba(0,0,0,0.04)]">
+                              <div>
+                                <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Order Number</p>
+                                <p className="font-bold text-xs text-[#1A1A1A] lowercase mt-0.5">{order.order_number}</p>
+                              </div>
                               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${statusColor(order.fulfillment_status)}`}>
                                 {order.fulfillment_status}
                               </span>
-                            </td>
-                            <td className="px-6 py-4 font-bold">{formatCurrency(order.total)}</td>
-                            <td className="px-6 py-4 text-right">
-                              {order.fulfillment_status !== "delivered" && order.fulfillment_status !== "cancelled" && (
-                                <button
-                                  onClick={() => handleCancelOrderClick(order.id)}
-                                  className="text-red-650 hover:text-red-700 p-1.5 cursor-pointer transition-colors inline-flex items-center justify-center rounded-lg hover:bg-red-50"
-                                  title="Cancel Order"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              )}
-                            </td>
+                            </div>
+
+                            {/* Card Details: Date, Total and Cancel Action */}
+                            <div className="flex justify-between items-center pt-1">
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Date</p>
+                                <p className="text-xs font-semibold text-[#6B6B6B]">{new Date(order.created_at).toLocaleDateString()}</p>
+                              </div>
+                              
+                              <div className="text-right space-y-1">
+                                <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Total Amount</p>
+                                <p className="text-sm font-bold text-[#1A1A1A]">{formatCurrency(order.total)}</p>
+                              </div>
+                            </div>
+
+                            {/* Cancel Order Action Button */}
+                            {canCancel && (
+                              <button
+                                onClick={() => handleCancelOrderClick(order.id)}
+                                className="w-full mt-3 py-2.5 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg text-red-650 hover:text-red-700 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Cancel Order</span>
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Desktop Order Table (Visible on large screens) */}
+                    <div className="hidden md:block rounded-xl border border-[rgba(0,0,0,0.06)] overflow-hidden bg-white">
+                      <table className="w-full text-left text-xs font-semibold uppercase tracking-wider">
+                        <thead className="bg-[#FAFAFA] border-b border-[rgba(0,0,0,0.06)]">
+                          <tr>
+                            <th className="px-6 py-4 text-[#9CA3AF]">Order</th>
+                            <th className="px-6 py-4 text-[#9CA3AF]">Date</th>
+                            <th className="px-6 py-4 text-[#9CA3AF]">Status</th>
+                            <th className="px-6 py-4 text-[#9CA3AF]">Total</th>
+                            <th className="px-6 py-4 text-[#9CA3AF] text-right">Actions</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-[rgba(0,0,0,0.04)] text-[#1A1A1A]">
+                          {orders.map((order) => (
+                            <tr key={order.id} className="hover:bg-[#FAFAFA] transition-colors">
+                              <td className="px-6 py-4 font-bold lowercase">{order.order_number}</td>
+                              <td className="px-6 py-4 text-[#6B6B6B]">{new Date(order.created_at).toLocaleDateString()}</td>
+                              <td className="px-6 py-4">
+                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${statusColor(order.fulfillment_status)}`}>
+                                  {order.fulfillment_status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 font-bold">{formatCurrency(order.total)}</td>
+                              <td className="px-6 py-4 text-right">
+                                {order.fulfillment_status !== "delivered" && order.fulfillment_status !== "cancelled" && (
+                                  <button
+                                    onClick={() => handleCancelOrderClick(order.id)}
+                                    className="text-red-650 hover:text-red-700 p-1.5 cursor-pointer transition-colors inline-flex items-center justify-center rounded-lg hover:bg-red-50"
+                                    title="Cancel Order"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
               </motion.div>

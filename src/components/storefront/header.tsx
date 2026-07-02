@@ -259,9 +259,6 @@ export function Header() {
         </div>
       </motion.header>
 
-      {/* Spacer for fixed header */}
-      <div className="h-20" />
-
       {/* ══════ Search Overlay ══════ */}
       <AnimatePresence>
         {isSearchOpen && (

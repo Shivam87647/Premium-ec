@@ -92,20 +92,22 @@ function NavSection({ label, items }: { label: string; items: typeof storeNav })
   );
 }
 
-export function AdminSidebar() {
+export function AdminSidebar({ isMobile = false }: { isMobile?: boolean }) {
   return (
-    <div className="flex h-full w-64 flex-col bg-white border-r border-[rgba(0,0,0,0.06)]">
+    <div className={`flex h-full w-full md:w-64 flex-col bg-white ${!isMobile ? "border-r border-[rgba(0,0,0,0.06)]" : ""}`}>
       {/* Brand */}
-      <div className="flex h-16 shrink-0 items-center px-6 border-b border-[rgba(0,0,0,0.06)]">
-        <Link href="/admin" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-[#1A1A1A] rounded-lg flex items-center justify-center">
-            <span className="text-white text-xs font-bold">P</span>
-          </div>
-          <span className="font-serif text-lg font-bold tracking-tight text-[#1A1A1A]">
-            Admin
-          </span>
-        </Link>
-      </div>
+      {!isMobile && (
+        <div className="flex h-16 shrink-0 items-center px-6 border-b border-[rgba(0,0,0,0.06)]">
+          <Link href="/admin" className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-[#1A1A1A] rounded-lg flex items-center justify-center">
+              <span className="text-white text-xs font-bold">P</span>
+            </div>
+            <span className="font-serif text-lg font-bold tracking-tight text-[#1A1A1A]">
+              Admin
+            </span>
+          </Link>
+        </div>
+      )}
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-5 px-3">

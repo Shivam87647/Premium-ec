@@ -39,17 +39,17 @@ export default async function StorefrontLayout({
     <AuthProvider>
       <CartProvider>
         <div className="flex min-h-screen flex-col">
-          <div className="fixed top-0 left-0 right-0 z-40 flex flex-col">
-            {showAnnouncement && (
-              <AnnouncementBar 
-                text={announcementText} 
-                link={announcementLink} 
-                bgColor={announcementColor} 
-              />
-            )}
+          {showAnnouncement && (
+            <AnnouncementBar 
+              text={announcementText} 
+              link={announcementLink} 
+              bgColor={announcementColor} 
+            />
+          )}
+          <div className="sticky top-0 z-40 flex flex-col">
             <Header />
           </div>
-          <main className="flex-1 pt-32">
+          <main className="flex-1">
             {children}
           </main>
           <Footer />

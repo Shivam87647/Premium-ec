@@ -636,23 +636,25 @@ export function ProductDetailClient({
           {/* Accordion Specs & Policies */}
           <div className="mt-10 border-t border-[rgba(0,0,0,0.06)] pt-2">
             <AccordionItem title="Specifications" defaultOpen>
-              <table className="w-full text-left text-xs border border-[rgba(0,0,0,0.04)] rounded-lg overflow-hidden bg-[#FAFAFA] shadow-sm">
-                <tbody className="divide-y divide-[rgba(0,0,0,0.04)] text-[#6B6B6B]">
-                  {Object.entries(
-                    Object.keys(parsed.specifications).length > 0 ? parsed.specifications : {
-                      "Composition": "100% Certified Organic Cotton",
-                      "Weight": "Mid-weight (200 GSM)",
-                      "Origin": "Ethically Tailored in Portugal",
-                      "Care": "Cold wash with like colors, air dry"
-                    }
-                  ).map(([key, val]) => (
-                    <tr key={key}>
-                      <td className="px-4 py-2.5 font-semibold text-[#1A1A1A] w-1/3">{key}</td>
-                      <td className="px-4 py-2.5">{val}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border border-[rgba(0,0,0,0.04)] rounded-lg overflow-hidden bg-[#FAFAFA] shadow-sm">
+                  <tbody className="divide-y divide-[rgba(0,0,0,0.04)] text-[#6B6B6B]">
+                    {Object.entries(
+                      Object.keys(parsed.specifications).length > 0 ? parsed.specifications : {
+                        "Composition": "100% Certified Organic Cotton",
+                        "Weight": "Mid-weight (200 GSM)",
+                        "Origin": "Ethically Tailored in Portugal",
+                        "Care": "Cold wash with like colors, air dry"
+                      }
+                    ).map(([key, val]) => (
+                      <tr key={key}>
+                        <td className="px-4 py-2.5 font-semibold text-[#1A1A1A] w-1/3">{key}</td>
+                        <td className="px-4 py-2.5">{val}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </AccordionItem>
             
             <AccordionItem title="Delivery & Returns">

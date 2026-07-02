@@ -37,6 +37,7 @@ function ProductsContent() {
   const { addToast } = useToast();
 
   const [isFilterOpen, setIsFilterOpen] = React.useState(true);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = React.useState(false);
   const [isSortOpen, setIsSortOpen] = React.useState(false);
   const [quickViewId, setQuickViewId] = React.useState<string | null>(null);
 
@@ -89,6 +90,115 @@ function ProductsContent() {
 
     router.replace(`/products?${params.toString()}`, { scroll: false });
   }, [router]);
+
+  const renderFilterControls = () => (
+    <>
+      {/* Category Checkboxes */}
+      <div className="space-y-4">
+        <h3 className="font-serif text-base font-bold text-[#1A1A1A]">Category</h3>
+        <div className="space-y-3">
+          {["Men", "Women", "Accessories"].map((cat) => (
+            <label key={cat} className="flex items-center space-x-3 cursor-pointer select-none group">
+              <input
+                type="checkbox"
+                checked={selectedCategories.includes(cat.toLowerCase())}
+                onChange={() => handleCategoryToggle(cat.toLowerCase())}
+                className="rounded border-[rgba(0,0,0,0.12)] text-[#1A1A1A] focus:ring-[#1A1A1A] w-4 h-4 cursor-pointer"
+              />
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#6B6B6B] group-hover:text-[#1A1A1A] transition-colors">{cat}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Price range slider */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="font-serif text-base font-bold text-[#1A1A1A]">Max Price</h3>
+          <span className="text-[10px] font-bold bg-[#F5F5F0] border border-[rgba(0,0,0,0.04)] px-2 py-0.5 rounded text-accent">
+            {formatCurrency(priceRange)}
+          </span>
+        </div>
+        <input
+          type="range"
+          min="500"
+          max="50000"
+          step="500"
+          value={priceRange}
+          onChange={(e) => {
+            setPriceRange(Number(e.target.value));
+            updateQueryParams(selectedCategories, activeSort, Number(e.target.value), selectedColor, selectedSize);
+          }}
+          className="w-full h-1 bg-[#E5E7EB] rounded-lg appearance-none cursor-pointer accent-accent"
+        />
+      </div>
+
+      {/* Color swatches */}
+      <div className="space-y-4">
+        <h3 className="font-serif text-base font-bold text-[#1A1A1A]">Color</h3>
+        <div className="flex flex-wrap gap-2.5">
+          {[
+            { name: "black", hex: "#000000" },
+            { name: "white", hex: "#FFFFFF" },
+            { name: "blue", hex: "#2563EB" },
+            { name: "green", hex: "#16A34A" },
+            { name: "red", hex: "#DC2626" },
+          ].map((color) => (
+            <button
+              key={color.name}
+              onClick={() => {
+                const nextColor = selectedColor === color.name ? null : color.name;
+                setSelectedColor(nextColor);
+                updateQueryParams(selectedCategories, activeSort, priceRange, nextColor, selectedSize);
+              }}
+              className={`h-7 w-7 rounded-full border transition-all flex items-center justify-center cursor-pointer ${
+                selectedColor === color.name 
+                  ? "border-[#1A1A1A] ring-2 ring-offset-2 ring-accent scale-105" 
+                  : "border-black/10 hover:border-black/30"
+              }`}
+              style={{ backgroundColor: color.hex, border: color.name === "white" ? "1px solid rgba(0,0,0,0.12)" : "none" }}
+              title={color.name}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Size swatches */}
+      <div className="space-y-4">
+        <h3 className="font-serif text-base font-bold text-[#1A1A1A]">Size</h3>
+        <div className="flex flex-wrap gap-2">
+          {["XS", "S", "M", "L", "XL"].map((size) => {
+            const isSelected = selectedSize === size.toLowerCase();
+            return (
+              <button
+                key={size}
+                onClick={() => {
+                  const nextSize = selectedSize === size.toLowerCase() ? null : size.toLowerCase();
+                  setSelectedSize(nextSize);
+                  updateQueryParams(selectedCategories, activeSort, priceRange, selectedColor, nextSize);
+                }}
+                className={`h-9 w-9 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all cursor-pointer ${
+                  isSelected
+                    ? "bg-[#1A1A1A] text-white border-[#1A1A1A] shadow-sm"
+                    : "bg-white text-[#6B6B6B] border-[rgba(0,0,0,0.08)] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                }`}
+              >
+                {size}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Clear filters trigger */}
+      <button
+        onClick={handleClearFilters}
+        className="w-full py-2.5 bg-[#FAFAFA] border border-[rgba(0,0,0,0.06)] text-[10px] font-bold uppercase tracking-widest text-[#6B6B6B] hover:text-[#1A1A1A] hover:bg-[#F5F5F0] rounded-lg cursor-pointer transition-all mt-4"
+      >
+        Clear All Filters
+      </button>
+    </>
+  );
 
   // Fetch Products Handler
   const fetchProducts = React.useCallback(async (pageNum: number, isAppend: boolean) => {
@@ -250,7 +360,13 @@ function ProductsContent() {
           <Button
             variant="outline"
             className="flex items-center space-x-2 cursor-pointer h-10 px-4 rounded-lg text-xs tracking-wider font-semibold border-[rgba(0,0,0,0.08)]"
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            onClick={() => {
+              if (typeof window !== "undefined" && window.innerWidth < 768) {
+                setIsMobileFilterOpen(true);
+              } else {
+                setIsFilterOpen(!isFilterOpen);
+              }
+            }}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             <span>FILTERS</span>
@@ -310,112 +426,9 @@ function ProductsContent() {
               animate={{ width: 260, opacity: 1, marginRight: 40 }}
               exit={{ width: 0, opacity: 0, marginRight: 0 }}
               transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-              className="w-full md:w-[260px] flex-shrink-0 bg-white p-6 rounded-2xl border border-[rgba(0,0,0,0.06)] shadow-sm space-y-8 overflow-hidden"
+              className="hidden md:flex flex-col w-[260px] flex-shrink-0 bg-white p-6 rounded-2xl border border-[rgba(0,0,0,0.06)] shadow-sm space-y-8 overflow-hidden"
             >
-              {/* Category Checkboxes */}
-              <div>
-                <h3 className="font-serif text-base font-bold mb-4 text-[#1A1A1A]">Category</h3>
-                <div className="space-y-3">
-                  {["Men", "Women", "Accessories"].map((cat) => (
-                    <label key={cat} className="flex items-center space-x-3 cursor-pointer select-none group">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(cat.toLowerCase())}
-                        onChange={() => handleCategoryToggle(cat.toLowerCase())}
-                        className="rounded border-[rgba(0,0,0,0.12)] text-[#1A1A1A] focus:ring-[#1A1A1A] w-4 h-4 cursor-pointer"
-                      />
-                      <span className="text-xs font-semibold uppercase tracking-wider text-[#6B6B6B] group-hover:text-[#1A1A1A] transition-colors">{cat}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Price range slider */}
-              <div>
-                <div className="flex justify-between items-center mb-3.5">
-                  <h3 className="font-serif text-base font-bold text-[#1A1A1A]">Max Price</h3>
-                  <span className="text-[10px] font-bold bg-[#F5F5F0] border border-[rgba(0,0,0,0.04)] px-2 py-0.5 rounded text-accent">
-                    {formatCurrency(priceRange)}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="500"
-                  max="50000"
-                  step="500"
-                  value={priceRange}
-                  onChange={(e) => {
-                    setPriceRange(Number(e.target.value));
-                    updateQueryParams(selectedCategories, activeSort, Number(e.target.value), selectedColor, selectedSize);
-                  }}
-                  className="w-full h-1 bg-[#E5E7EB] rounded-lg appearance-none cursor-pointer accent-accent"
-                />
-              </div>
-
-              {/* Color swatches */}
-              <div>
-                <h3 className="font-serif text-base font-bold mb-4 text-[#1A1A1A]">Color</h3>
-                <div className="flex flex-wrap gap-2.5">
-                  {[
-                    { name: "black", hex: "#000000" },
-                    { name: "white", hex: "#FFFFFF" },
-                    { name: "blue", hex: "#2563EB" },
-                    { name: "green", hex: "#16A34A" },
-                    { name: "red", hex: "#DC2626" },
-                  ].map((color) => (
-                    <button
-                      key={color.name}
-                      onClick={() => {
-                        const nextColor = selectedColor === color.name ? null : color.name;
-                        setSelectedColor(nextColor);
-                        updateQueryParams(selectedCategories, activeSort, priceRange, nextColor, selectedSize);
-                      }}
-                      className={`h-7 w-7 rounded-full border transition-all flex items-center justify-center cursor-pointer ${
-                        selectedColor === color.name 
-                          ? "border-[#1A1A1A] ring-2 ring-offset-2 ring-accent scale-105" 
-                          : "border-black/10 hover:border-black/30"
-                      }`}
-                      style={{ backgroundColor: color.hex, border: color.name === "white" ? "1px solid rgba(0,0,0,0.12)" : "none" }}
-                      title={color.name}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Size swatches */}
-              <div>
-                <h3 className="font-serif text-base font-bold mb-4 text-[#1A1A1A]">Size</h3>
-                <div className="flex flex-wrap gap-2">
-                  {["XS", "S", "M", "L", "XL"].map((size) => {
-                    const isSelected = selectedSize === size;
-                    return (
-                      <button
-                        key={size}
-                        onClick={() => {
-                          const nextSize = selectedSize === size ? null : size;
-                          setSelectedSize(nextSize);
-                          updateQueryParams(selectedCategories, activeSort, priceRange, selectedColor, nextSize);
-                        }}
-                        className={`h-9 w-9 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all cursor-pointer ${
-                          isSelected
-                            ? "bg-[#1A1A1A] text-white border-[#1A1A1A] shadow-sm"
-                            : "bg-white text-[#6B6B6B] border-[rgba(0,0,0,0.08)] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Clear filters trigger */}
-              <button
-                onClick={handleClearFilters}
-                className="w-full py-2.5 bg-[#FAFAFA] border border-[rgba(0,0,0,0.06)] text-[10px] font-bold uppercase tracking-widest text-[#6B6B6B] hover:text-[#1A1A1A] hover:bg-[#F5F5F0] rounded-lg cursor-pointer transition-all"
-              >
-                Clear All Filters
-              </button>
+              {renderFilterControls()}
             </motion.aside>
           )}
         </AnimatePresence>
@@ -520,7 +533,7 @@ function ProductsContent() {
             </div>
           ) : (
             <div className="space-y-12">
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
                 {products.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -554,6 +567,18 @@ function ProductsContent() {
           )}
         </div>
       </div>
+
+      {/* Mobile Filters Modal */}
+      <Modal
+        isOpen={isMobileFilterOpen}
+        onClose={() => setIsMobileFilterOpen(false)}
+        title="Filters"
+        size="sm"
+      >
+        <div className="space-y-8 py-4">
+          {renderFilterControls()}
+        </div>
+      </Modal>
 
       {/* Quick View Modal */}
       <Modal

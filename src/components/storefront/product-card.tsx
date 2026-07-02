@@ -115,7 +115,33 @@ export function ProductCard({
           )}
         </motion.div>
 
-        {/* Quick Add Button */}
+        {/* Mobile Quick Add Button (Floating Icon) */}
+        <button
+          className="absolute bottom-3 right-3 z-20 lg:hidden flex h-10 w-10 items-center justify-center bg-white/95 backdrop-blur-sm text-[#1A1A1A] rounded-full shadow-md active:scale-95 transition-all cursor-pointer border border-[rgba(0,0,0,0.06)]"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            addItem({
+              id,
+              title,
+              price: salePrice || price,
+              image: primaryImage,
+              quantity: 1,
+              variant: "Default",
+            });
+            addToast({
+              title: "Added to Bag",
+              description: `${title} has been added to your shopping bag.`,
+              type: "success",
+            });
+            if (onQuickAdd) onQuickAdd(id);
+          }}
+          aria-label={`Quick Add ${title} to Cart`}
+        >
+          <ShoppingBag className="w-4 h-4" />
+        </button>
+
+        {/* Desktop Quick Add Button (Animated Hover) */}
         <motion.div
           initial={{ y: 16, opacity: 0 }}
           animate={{
@@ -123,7 +149,7 @@ export function ProductCard({
             opacity: isHovered ? 1 : 0,
           }}
           transition={{ duration: 0.3, delay: 0.08, ease: "easeOut" }}
-          className="absolute bottom-3 left-3 right-3 z-20"
+          className="absolute bottom-3 left-3 right-3 z-20 hidden lg:block"
         >
           <button
             className="w-full flex items-center justify-center gap-2 py-3 bg-white/95 backdrop-blur-sm text-[#1A1A1A] rounded-lg text-xs font-semibold uppercase tracking-wider shadow-lg hover:bg-white transition-colors cursor-pointer"
