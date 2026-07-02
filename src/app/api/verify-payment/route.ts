@@ -44,10 +44,12 @@ export async function POST(req: Request) {
         .single();
 
       if (lookupError || !existingOrder) {
-        return NextResponse.json({ error: "Order not found for COD verification" }, { status: 400 });
-      }
-
-      if (existingOrder.notes !== "Cash") {
+        // In local development mock mode, fallback gracefully if RLS blocks the select query
+        if (!isMockMode) {
+          console.error("COD Lookup Error:", lookupError);
+          return NextResponse.json({ error: "Order not found for COD verification" }, { status: 400 });
+        }
+      } else if (existingOrder.notes !== "Cash") {
         return NextResponse.json({ error: "Order was not created as Cash on Delivery" }, { status: 400 });
       }
     }
@@ -67,7 +69,9 @@ export async function POST(req: Request) {
 
       if (error) {
         console.error("Supabase Order Update Error:", error);
-        throw new Error(error.message);
+        if (!isMockMode) {
+          throw new Error(error.message);
+        }
       }
     }
 
