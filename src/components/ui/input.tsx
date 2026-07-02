@@ -1,0 +1,76 @@
+"use client";
+
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { Eye, EyeOff } from "lucide-react";
+
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, label, error, type = "text", ...props }, ref) => {
+    const [showPassword, setShowPassword] = React.useState(false);
+
+    const isPasswordType = type === "password";
+    const inputType = isPasswordType && showPassword ? "text" : type;
+
+    return (
+      <div className="relative w-full">
+        <input
+          type={inputType}
+          ref={ref}
+          className={cn(
+            "peer w-full rounded-lg border bg-white px-4 py-3 text-[15px] text-[#1A1A1A] transition-all duration-200",
+            "placeholder-transparent",
+            "focus:outline-none focus:ring-0",
+            error
+              ? "border-destructive focus:border-destructive"
+              : "border-[rgba(0,0,0,0.12)] focus:border-[#1A1A1A]",
+            label ? "pt-5 pb-2" : "py-3",
+            isPasswordType ? "pr-10" : "",
+            className
+          )}
+          placeholder={label || props.placeholder || " "}
+          {...props}
+        />
+        {label && (
+          <label
+            className={cn(
+              "pointer-events-none absolute left-4 origin-top-left select-none font-medium transition-all duration-200",
+              "top-3.5 text-[15px]",
+              error
+                ? "text-destructive"
+                : "text-[#9CA3AF] peer-focus:text-[#6B6B6B] peer-[:not(:placeholder-shown)]:text-[#6B6B6B]",
+              "peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:uppercase peer-focus:tracking-[0.08em] peer-focus:font-semibold",
+              "peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:uppercase peer-[:not(:placeholder-shown)]:tracking-[0.08em] peer-[:not(:placeholder-shown)]:font-semibold"
+            )}
+          >
+            {label}
+          </label>
+        )}
+        {isPasswordType && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-[18px] text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors p-1"
+          >
+            {showPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
+          </button>
+        )}
+        {error && (
+          <p className="mt-1.5 text-xs font-medium text-destructive">{error}</p>
+        )}
+      </div>
+    );
+  }
+);
+
+Input.displayName = "Input";
+
+export { Input };
